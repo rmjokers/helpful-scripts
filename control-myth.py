@@ -1,3 +1,5 @@
+# Simple script to connect to mythtv frontend and control basic navigation from a remote system.
+
 import curses
 import sys
 import socket
@@ -27,7 +29,7 @@ def main():
 
     command = ""
 
-    if c == 113: # q
+    if c == 113: # q breaks the while loop
       break
     elif c == 27:
       command = "escape"
@@ -37,11 +39,11 @@ def main():
       command = "return"
     elif c == curses.KEY_DOWN:
       command = "down"
-    elif c == curses.KEY_RIGHT: # l
+    elif c == curses.KEY_RIGHT:
       command = "right"
-    elif c == curses.KEY_UP: # k
+    elif c == curses.KEY_UP:
       command = "up"
-    elif c == curses.KEY_LEFT: # h
+    elif c == curses.KEY_LEFT:
       command = "left"
     elif c == curses.KEY_NPAGE: # page up
       command = "pageup"
@@ -59,6 +61,7 @@ def main():
     #scrn.addch(c)
     scrn.refresh()
 
+    # This is rather inefficient...perhaps we should keep the socket open?
     if command:
       # Open a socket (TCP) and connect to desk Mythtv frontend
       s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
