@@ -39,6 +39,7 @@ if (len(sys.argv) <= 3):
 base_url = "http://packages.ubuntu.com"
 # Relative name in the format the website will return to us
 root_package_name = "/" + options.distro + "/" + options.package
+max_retries = 5
 
 
 href_re = re.compile("a href=\"(\S+)\"")
@@ -68,11 +69,15 @@ while len(packages_to_load) > 0:
   # Add this element to the list of all packages
   all_packages.append(element)
 
-  print "Opening description page for package: " + element + " : " + (base_url + element)
-  file = urllib.urlopen(base_url + element)
+  for i in range(max_retries):
+    try:
+      print "Opening description page for package: " + element + " : " + (base_url + element)
+      file = urllib.urlopen(base_url + element)
+      break
+    except Exception, err:
+      print "Page load failed..."
 
   for line in file:
-
     unv = universe_re.search(line)
     dep = dep_re.search(line)
 
@@ -110,9 +115,14 @@ while len(packages_to_load) > 0:
   # URL for the download page for the package
   package_name = element.split('/')[2]
   download_url = base_url + "/" + options.distro + "/" + options.arch + "/" + package_name + "/download"
-  print "\tExamining download URL: " + download_url
 
-  download = urllib.urlopen(download_url)
+  for i in range(max_retries):
+    try:
+      print "\tExamining download URL: " + download_url
+      download = urllib.urlopen(download_url)
+      break
+    except Exception, err:
+      print "Page load failed..."
 
   for d in download:
     href = full_href_re.search(d)
@@ -132,6 +142,7 @@ while len(packages_to_load) > 0:
   start = False
   end = False
   
+  # Sleep between 1 and 10 seconds after each package is examined
   time.sleep(random.randrange(1,10))
 
 print "Full dependency list:"
