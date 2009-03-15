@@ -1,32 +1,49 @@
-# Resolve Ubuntu universe package dependencies.
-#
-# Given an Ubuntu package, identify all dependencies from the Universe
-# repository and get a list of HREFs for those packages. This allows us to
-# download the packages and install them offline more easily.
+#!/usr/bin/python
+
+""" (UPDR) Ubuntu Package Dependency Resolver.
+
+Given an Ubuntu package, identify all dependencies from the repository and get
+a list of HREFs for those packages. This allows us to download the packages and
+install them offline more easily.
+
+Originally, this script only operated on the Universe repository, but this was
+expanded because some common dependencies in the Main repository are not on
+default install media, but would be required for offline installation.
+"""
+
+__author__ = "Rodney Jokerst"
+__version__ = "1.0"
+__date__ = "March 15, 2009"
+__license__ = "GPL"
 
 import re
 import sys
 import urllib
 import time # for sleep
 import random # for sleep time
+from optparse import OptionParser # for command line options
 
+parser = OptionParser()
+parser.add_option("-p", "--package", help="Package to resolve dependencies of (i.e. ghex)", dest="package")
+parser.add_option("-d", "--distribution", help="Distribution name (i.e. gutsy, hardy)", dest="distro")
+parser.add_option("-a", "--architecture", help="Architecture (i.e. i386, amd64)", dest="arch")
+
+# Parse command line args
+(options, args) = parser.parse_args()
+
+# Print help if we get no command-line arguements
 if (len(sys.argv) <= 3):
-  print "Usage: python uups.py ghex hardy amd64"
+  parser.print_help()
   exit(1)
-
-# Command line args
-package = sys.argv[1]
-distro = sys.argv[2] # hardy
-arch = sys.argv[3] # amd64 / i386
 
 base_url = "http://packages.ubuntu.com"
 # Relative name in the format the website will return to us
-root_package_name = "/" + distro + "/" + package
+root_package_name = "/" + options.distro + "/" + options.package
 
 
 href_re = re.compile("a href=\"(\S+)\"")
-full_href_re = re.compile("a href=\"(http:\S+universe\S+)\"")
-distro_re = re.compile(distro)
+full_href_re = re.compile("a href=\"(http:\S+/pool/\S+)\"")
+distro_re = re.compile(options.distro)
 dep_re = re.compile("<ul class=\"uldep\">")
 ndep_re = re.compile("</ul>")
 universe_re = re.compile(">universe<")
@@ -60,8 +77,8 @@ while len(packages_to_load) > 0:
     dep = dep_re.search(line)
 
     # First, look for the universe marker. We only care about packages from universe for now
-    if unv:
-      universe = True
+    #if unv:
+    universe = True
 
     # Wait until we find marker for start of dependencies section
     if universe and dep:
@@ -92,7 +109,7 @@ while len(packages_to_load) > 0:
   # Now that we are finished processing the package description, 
   # URL for the download page for the package
   package_name = element.split('/')[2]
-  download_url = base_url + "/" + distro + "/" + arch + "/" + package_name + "/download"
+  download_url = base_url + "/" + options.distro + "/" + options.arch + "/" + package_name + "/download"
   print "\tExamining download URL: " + download_url
 
   download = urllib.urlopen(download_url)
