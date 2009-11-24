@@ -1,5 +1,3 @@
-# Simple script to connect to mythtv frontend and control basic navigation from a remote system.
-
 import curses
 import sys
 import socket
@@ -29,7 +27,7 @@ def main():
 
     command = ""
 
-    if c == 113: # q breaks the while loop
+    if c == 113: # q
       break
     elif c == 27:
       command = "escape"
@@ -45,28 +43,26 @@ def main():
       command = "up"
     elif c == curses.KEY_LEFT:
       command = "left"
-    elif c == curses.KEY_NPAGE: # page up
+    elif c == curses.KEY_NPAGE:
       command = "pageup"
-    elif c == curses.KEY_PPAGE: # page down
+    elif c == curses.KEY_PPAGE:
       command = "pagedown"
-    elif c == 112: # p
-      command = "p"
-    elif c == 100: # d
-      command = "d"
-    elif c == 113: # q
-      command = "q"
-    elif c == 122: # z
-      command = "z"
+    else:
+      command = str(chr(c))
+
     scrn.addstr(command)
     #scrn.addch(c)
     scrn.refresh()
 
-    # This is rather inefficient...perhaps we should keep the socket open?
     if command:
-      # Open a socket (TCP) and connect to desk Mythtv frontend
+      # Open a socket (TCP) and connect to Mythtv frontend
       s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
       s.connect(("cube.local", 6546))
+      #s.connect(("localhost", 6546))
+
+      # Send key string plus key value
       s.send("key " + command + "\n")
+
       s.close()
 
   restorescreen()
